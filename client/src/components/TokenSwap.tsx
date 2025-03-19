@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { ArrowDownUp, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ export function TokenSwap() {
   const [fromChain, setFromChain] = useState<ChainId>("ETH");
   const [toChain, setToChain] = useState<ChainId>("BSC");
   const [fromToken, setFromToken] = useState("ETH");
-  const [toToken, setToToken] = useState("WBNB");
+  const [toToken, setToToken] = useState("BNB");
   const [slippage, setSlippage] = useState(0.5);
   const [customSlippage, setCustomSlippage] = useState("");
 
@@ -32,41 +32,29 @@ export function TokenSwap() {
     }
   });
 
-  const handleSwap = () => {
-    const parsedAmount = parseFloat(amount);
-    if (!amount || isNaN(parsedAmount) || parsedAmount <= 0) {
-      toast({
-        title: "Montant invalide",
-        description: "Veuillez entrer un montant valide supérieur à 0",
-        variant: "destructive",
-      });
-      return;
+  // Fonction utilitaire pour vérifier si un montant est valide
+  const isValidAmount = (value: string) => {
+    const num = parseFloat(value);
+    return value !== "" && !isNaN(num) && num > 0;
+  };
+
+  // Effet pour mettre à jour l'estimation quand les paramètres changent
+  useEffect(() => {
+    if (isValidAmount(amount)) {
+      const swapRequest: SwapRequest = {
+        fromChain,
+        toChain,
+        fromToken,
+        toToken,
+        amount: parseFloat(amount),
+        slippage,
+      };
+      getQuote(swapRequest);
     }
+  }, [amount, fromChain, toChain, fromToken, toToken, slippage]);
 
-    const swapRequest: SwapRequest = {
-      fromChain,
-      toChain,
-      fromToken,
-      toToken,
-      amount: parsedAmount,
-      slippage,
-    };
-
-    getQuote(swapRequest, {
-      onSuccess: (data) => {
-        toast({
-          title: "Estimation reçue",
-          description: `Vous recevrez environ ${data.estimatedOutput.toFixed(6)} ${toToken}`,
-        });
-      },
-      onError: (error) => {
-        toast({
-          title: "Erreur",
-          description: "Impossible d'obtenir une estimation pour cet échange",
-          variant: "destructive",
-        });
-      },
-    });
+  const handleAmountChange = (value: string) => {
+    setAmount(value);
   };
 
   const handleSlippageChange = (value: string) => {
@@ -82,9 +70,6 @@ export function TokenSwap() {
     setToChain(fromChain);
     setFromToken(toToken);
     setToToken(fromToken);
-    if (amount) {
-      handleSwap(); // Recalculer l'estimation après le flip
-    }
   };
 
   return (
@@ -144,13 +129,7 @@ export function TokenSwap() {
               type="number"
               placeholder="0.0"
               value={amount}
-              onChange={(e) => {
-                setAmount(e.target.value);
-                const parsedAmount = parseFloat(e.target.value);
-                if (e.target.value && !isNaN(parsedAmount) && parsedAmount > 0) {
-                  handleSwap(); // Obtenir une nouvelle estimation à chaque changement valide
-                }
-              }}
+              onChange={(e) => handleAmountChange(e.target.value)}
             />
           </div>
 
@@ -213,8 +192,40 @@ export function TokenSwap() {
       <CardFooter>
         <Button
           className="w-full"
-          onClick={handleSwap}
-          disabled={isPending}
+          onClick={() => {
+            if (!isValidAmount(amount)) {
+              toast({
+                title: "Montant invalide",
+                description: "Veuillez entrer un montant valide supérieur à 0",
+                variant: "destructive",
+              });
+              return;
+            }
+            const swapRequest: SwapRequest = {
+              fromChain,
+              toChain,
+              fromToken,
+              toToken,
+              amount: parseFloat(amount),
+              slippage,
+            };
+            getQuote(swapRequest, {
+              onSuccess: (data) => {
+                toast({
+                  title: "Estimation reçue",
+                  description: `Vous recevrez environ ${data.estimatedOutput.toFixed(6)} ${toToken}`,
+                });
+              },
+              onError: (error) => {
+                toast({
+                  title: "Erreur",
+                  description: "Impossible d'obtenir une estimation pour cet échange",
+                  variant: "destructive",
+                });
+              },
+            });
+          }}
+          disabled={!isValidAmount(amount) || isPending}
         >
           {isPending ? "Calcul en cours..." : "Échanger"}
         </Button>
