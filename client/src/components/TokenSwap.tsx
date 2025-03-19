@@ -33,7 +33,8 @@ export function TokenSwap() {
   });
 
   const handleSwap = () => {
-    if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
+    const parsedAmount = parseFloat(amount);
+    if (!amount || isNaN(parsedAmount) || parsedAmount <= 0) {
       toast({
         title: "Montant invalide",
         description: "Veuillez entrer un montant valide supérieur à 0",
@@ -47,7 +48,7 @@ export function TokenSwap() {
       toChain,
       fromToken,
       toToken,
-      amount: parseFloat(amount),
+      amount: parsedAmount,
       slippage,
     };
 
@@ -145,8 +146,9 @@ export function TokenSwap() {
               value={amount}
               onChange={(e) => {
                 setAmount(e.target.value);
-                if (e.target.value && !isNaN(parseFloat(e.target.value))) {
-                  handleSwap(); // Obtenir une nouvelle estimation à chaque changement
+                const parsedAmount = parseFloat(e.target.value);
+                if (e.target.value && !isNaN(parsedAmount) && parsedAmount > 0) {
+                  handleSwap(); // Obtenir une nouvelle estimation à chaque changement valide
                 }
               }}
             />

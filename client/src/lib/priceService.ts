@@ -10,12 +10,18 @@ const BASE_PRICES = {
   ETH: 3500,
   USDT: 1,
   USDC: 1,
+  WBTC: 65000,
+  LINK: 15,
   BNB: 420,
   CAKE: 3,
   BUSD: 1,
+  XRP: 0.6,
+  ADA: 0.5,
   SOL: 125,
   RAY: 0.5,
-  SRM: 0.15
+  SRM: 0.15,
+  ORCA: 0.8,
+  BONK: 0.000001
 };
 
 // Mise à jour des prix pour tous les tokens
