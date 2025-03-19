@@ -28,6 +28,7 @@ export const swapRequestSchema = z.object({
   fromToken: z.string(),
   toToken: z.string(),
   amount: z.number().positive(),
+  slippage: z.number().min(0.1).max(50).default(0.5), // Slippage en pourcentage
 });
 
 export type SwapRequest = z.infer<typeof swapRequestSchema>;

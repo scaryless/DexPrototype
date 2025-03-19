@@ -17,24 +17,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/swap/quote", async (req, res) => {
     try {
       const data = swapRequestSchema.parse(req.body);
-      
+
       const fromPrice = await storage.getTokenPrice(data.fromToken, data.fromChain);
       const toPrice = await storage.getTokenPrice(data.toToken, data.toChain);
-      
+
       const exchangeRate = toPrice / fromPrice;
       const estimatedOutput = data.amount * exchangeRate;
-      
+
       // Simulate network fees based on chains
       const fees = {
         ETH: 0.001,
         BSC: 0.0005,
         SOL: 0.00001
       };
-      
+
+      // Calcul du prix minimum avec le slippage
+      const minOutput = estimatedOutput * (1 - data.slippage / 100);
+
       res.json({
         estimatedOutput,
+        minOutput,
         fee: fees[data.toChain as keyof typeof fees],
-        exchangeRate
+        exchangeRate,
+        priceImpact: ((1 - exchangeRate) * 100).toFixed(2) + '%'
       });
     } catch (error) {
       res.status(400).json({ error: "Invalid swap request" });
