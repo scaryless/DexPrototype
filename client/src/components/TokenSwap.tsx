@@ -33,22 +33,38 @@ export function TokenSwap() {
   });
 
   const handleSwap = () => {
-    if (!amount) {
+    if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
       toast({
-        title: "Enter amount",
-        description: "Please enter an amount to swap",
+        title: "Montant invalide",
+        description: "Veuillez entrer un montant valide supérieur à 0",
         variant: "destructive",
       });
       return;
     }
 
-    getQuote({
+    const swapRequest: SwapRequest = {
       fromChain,
       toChain,
       fromToken,
       toToken,
       amount: parseFloat(amount),
       slippage,
+    };
+
+    getQuote(swapRequest, {
+      onSuccess: (data) => {
+        toast({
+          title: "Estimation reçue",
+          description: `Vous recevrez environ ${data.estimatedOutput.toFixed(6)} ${toToken}`,
+        });
+      },
+      onError: (error) => {
+        toast({
+          title: "Erreur",
+          description: "Impossible d'obtenir une estimation pour cet échange",
+          variant: "destructive",
+        });
+      },
     });
   };
 
@@ -65,6 +81,9 @@ export function TokenSwap() {
     setToChain(fromChain);
     setFromToken(toToken);
     setToToken(fromToken);
+    if (amount) {
+      handleSwap(); // Recalculer l'estimation après le flip
+    }
   };
 
   return (
@@ -79,7 +98,7 @@ export function TokenSwap() {
             </PopoverTrigger>
             <PopoverContent className="w-80">
               <div className="space-y-4">
-                <h4 className="font-medium">Slippage Tolerance</h4>
+                <h4 className="font-medium">Tolérance de slippage</h4>
                 <div className="flex gap-2">
                   {SLIPPAGE_PRESETS.map((preset) => (
                     <Button
@@ -100,7 +119,7 @@ export function TokenSwap() {
                     type="number"
                     value={customSlippage}
                     onChange={(e) => handleSlippageChange(e.target.value)}
-                    placeholder="Custom"
+                    placeholder="Personnalisé"
                     className="w-24"
                   />
                   <span className="text-muted-foreground">%</span>
@@ -124,7 +143,12 @@ export function TokenSwap() {
               type="number"
               placeholder="0.0"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onChange={(e) => {
+                setAmount(e.target.value);
+                if (e.target.value && !isNaN(parseFloat(e.target.value))) {
+                  handleSwap(); // Obtenir une nouvelle estimation à chaque changement
+                }
+              }}
             />
           </div>
 
@@ -159,25 +183,25 @@ export function TokenSwap() {
           {quote && (
             <div className="text-sm space-y-2 p-4 bg-muted/50 rounded-lg">
               <div className="flex justify-between text-muted-foreground">
-                <span>Exchange Rate</span>
+                <span>Taux de change</span>
                 <span>1 {fromToken} = {quote.exchangeRate.toFixed(6)} {toToken}</span>
               </div>
               <div className="flex justify-between text-muted-foreground">
-                <span>Minimum Received</span>
+                <span>Minimum reçu</span>
                 <span>{quote.minOutput.toFixed(6)} {toToken}</span>
               </div>
               <div className="flex justify-between text-muted-foreground">
-                <span>Price Impact</span>
+                <span>Impact sur le prix</span>
                 <span className={quote.priceImpact > 2 ? "text-destructive" : ""}>
                   {quote.priceImpact}
                 </span>
               </div>
               <div className="flex justify-between text-muted-foreground">
-                <span>Network Fee</span>
+                <span>Frais de réseau</span>
                 <span>{quote.fee} {toToken}</span>
               </div>
               <div className="flex justify-between text-muted-foreground">
-                <span>Slippage Tolerance</span>
+                <span>Tolérance de slippage</span>
                 <span>{slippage}%</span>
               </div>
             </div>
@@ -190,7 +214,7 @@ export function TokenSwap() {
           onClick={handleSwap}
           disabled={isPending}
         >
-          {isPending ? "Getting Quote..." : "Swap"}
+          {isPending ? "Calcul en cours..." : "Échanger"}
         </Button>
       </CardFooter>
     </Card>
