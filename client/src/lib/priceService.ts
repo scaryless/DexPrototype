@@ -1,39 +1,65 @@
 import { SUPPORTED_TOKENS } from "./tokens";
 
-// Simule des variations de prix pour le développement
-function getRandomPriceVariation(basePrice: number): number {
-  const variation = (Math.random() - 0.5) * 0.01; // ±0.5% variation
-  return basePrice * (1 + variation);
-}
-
-const BASE_PRICES = {
-  ETH: 3500,
-  USDT: 1,
-  USDC: 1,
-  WBTC: 65000,
-  LINK: 15,
-  BNB: 420,
-  CAKE: 3,
-  BUSD: 1,
-  XRP: 0.6,
-  ADA: 0.5,
-  SOL: 125,
-  RAY: 0.5,
-  SRM: 0.15,
-  ORCA: 0.8,
-  BONK: 0.000001
+const COINGECKO_IDS: Record<string, string> = {
+  ETH: 'ethereum',
+  USDT: 'tether',
+  USDC: 'usd-coin',
+  WBTC: 'wrapped-bitcoin',
+  LINK: 'chainlink',
+  BNB: 'binancecoin',
+  CAKE: 'pancakeswap-token',
+  BUSD: 'binance-usd',
+  XRP: 'ripple',
+  ADA: 'cardano',
+  SOL: 'solana',
+  RAY: 'raydium',
+  SRM: 'serum',
+  ORCA: 'orca',
+  BONK: 'bonk'
 };
+
+async function fetchPricesFromCoingecko(): Promise<Record<string, number>> {
+  try {
+    const ids = Object.values(COINGECKO_IDS).join(',');
+    const response = await fetch(
+      `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`
+    );
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch prices from CoinGecko');
+    }
+
+    const data = await response.json();
+    
+    // Convertir la réponse de CoinGecko en notre format
+    const prices: Record<string, number> = {};
+    Object.entries(COINGECKO_IDS).forEach(([symbol, id]) => {
+      if (data[id]) {
+        prices[symbol] = data[id].usd;
+      }
+    });
+    
+    return prices;
+  } catch (error) {
+    console.error('Error fetching prices:', error);
+    return {};
+  }
+}
 
 // Mise à jour des prix pour tous les tokens
 export async function updateTokenPrices(): Promise<void> {
+  const prices = await fetchPricesFromCoingecko();
+  
   SUPPORTED_TOKENS.forEach(token => {
-    const basePrice = BASE_PRICES[token.symbol as keyof typeof BASE_PRICES] || 1;
-    token.price = getRandomPriceVariation(basePrice);
+    if (prices[token.symbol]) {
+      token.price = prices[token.symbol];
+    }
   });
 }
 
-// Initialise les prix et les met à jour toutes les 10 secondes
+// Initialise les prix et les met à jour toutes les 60 secondes
+// Note: CoinGecko a une limite de rate de 10-50 appels par minute pour l'API gratuite
 export function initializePriceService(): void {
   updateTokenPrices();
-  setInterval(updateTokenPrices, 10000);
+  setInterval(updateTokenPrices, 60000); // Mise à jour toutes les 60 secondes
 }
