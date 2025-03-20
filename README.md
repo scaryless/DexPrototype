@@ -1,10 +1,11 @@
 # Cross-Chain DEX Interface
 
-Une interface DEX avancée pour les échanges cross-chain entre BSC, ETH et Solana, offrant une expérience utilisateur améliorée pour les swaps de crypto-monnaies.
+Un squelette d'interface DEX avancée pour les échanges cross-chain entre BSC, ETH et Solana, offrant une expérience utilisateur améliorée pour les swaps de crypto-monnaies.
+/*C'est un prototype , il y a place a beaucoup d'améliorations et surtout innovation.
 
-## Fonctionnalités
+## Fonctionnalités (À TRAVAILLER POUR LE MOMENT ... (
 
-- 🔄 Swap de tokens entre différentes blockchains
+- 🔄 Swap de tokens entre différentes blockchains (C'est le but de notre DEX !)
 - 💱 Support pour ETH, BSC et Solana
 - 📊 Estimation en temps réel des prix
 - 🔒 Simulation de connexion de wallet
