@@ -19,8 +19,8 @@ Une interface DEX avancée pour les échanges cross-chain entre BSC, ETH et Sola
 
 1. Clonez le dépôt :
 ```bash
-git clone <votre-repo-url>
-cd cross-chain-dex
+git clone https://github.com/scaryless/DexPrototype.git
+cd DexPrototype
 ```
 
 2. Installez les dépendances :
@@ -36,7 +36,7 @@ Pour démarrer le serveur de développement :
 npm run dev
 ```
 
-L'application sera accessible à l'adresse : `http://localhost:5000`
+L'application sera accessible à l'adresse : `http://localhost:8080`
 
 ## Structure du Projet
 
